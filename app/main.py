@@ -20,3 +20,11 @@ def healthcheck() -> MessageResponse:
 @app.get("/me", response_model=MockUser)
 def me(current_user: MockUser = Depends(get_current_user)) -> MockUser:
     return current_user
+
+
+@app.get("/jwks-or-config")
+def jwks_or_config() -> dict[str, str]:
+    return {
+        "note": "MVP config endpoint; use /auth/config for service integration details.",
+        "config_url": f"{os.getenv('APP_BASE_URL', 'http://127.0.0.1:8000')}/auth/config",
+    }
