@@ -30,7 +30,7 @@ Copy `.env.example` to `.env` and adjust values as needed.
 
 Important variables:
 
-- `APP_BASE_URL`: base URL used for redirects (default `http://127.0.0.1:8000`)
+- `APP_BASE_URL`: base URL used for redirects (default `http://127.0.0.1:8001`)
 - `SESSION_SECRET`: signing secret for the cookie session
 - `SESSION_COOKIE_NAME`: session cookie key
 - `SESSION_SECURE`: set `true` in HTTPS environments
@@ -42,12 +42,12 @@ Important variables:
 ## Run
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8001
 ```
 
 ## Manual test scenario
 
-1. Open `http://127.0.0.1:8000/auth/login` in your browser.
+1. Open `http://127.0.0.1:8001/auth/login` in your browser.
 2. Follow redirects through `/mock-franceconnect/authorize` and `/auth/callback`.
 3. Call `GET /me` to retrieve the authenticated mock user.
 4. Call `POST /auth/logout`.
@@ -64,15 +64,15 @@ uvicorn app.main:app --reload
 
 ```bash
 # 1) Authenticate and keep cookie
-curl -i -c cookies.txt "http://127.0.0.1:8000/auth/login"
+curl -i -c cookies.txt "http://127.0.0.1:8001/auth/login"
 
 # 2) Follow browser redirects manually once (or open /auth/login in browser),
 #    then request a token using the same cookie jar
-curl -s -b cookies.txt -X POST "http://127.0.0.1:8000/auth/token"
+curl -s -b cookies.txt -X POST "http://127.0.0.1:8001/auth/token"
 
 # 3) Use token on consumer services (examples)
-curl -H "Authorization: Bearer <token>" "http://127.0.0.1:8000/comptes"
-curl -H "Authorization: Bearer <token>" "http://127.0.0.1:8000/cards"
+curl -H "Authorization: Bearer <token>" "http://127.0.0.1:8002/comptes"
+curl -H "Authorization: Bearer <token>" "http://127.0.0.1:8003/cards"
 curl -H "Authorization: Bearer <token>" "http://localhost:3000/api/rooms"
 ```
 
@@ -81,7 +81,7 @@ curl -H "Authorization: Bearer <token>" "http://localhost:3000/api/rooms"
 Set these variables on the target service:
 
 - `SERVICE_AUTH_ENABLED=true`
-- `FRANCECONNECT_BASE_URL=http://127.0.0.1:8000`
+- `FRANCECONNECT_BASE_URL=http://127.0.0.1:8001`
 - `AUTH_REQUEST_TIMEOUT_SECONDS=2.5` (Python services) or `AUTH_REQUEST_TIMEOUT_MS=2500` (Node)
 
 The target service must:

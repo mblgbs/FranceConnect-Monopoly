@@ -13,7 +13,7 @@ from .token_service import TOKEN_ISSUER, TOKEN_TTL_SECONDS, build_access_token, 
 router = APIRouter(prefix="/auth", tags=["auth"])
 mock_router = APIRouter(prefix="/mock-franceconnect", tags=["mock-provider"])
 
-APP_BASE_URL = os.getenv("APP_BASE_URL", "http://127.0.0.1:8000")
+APP_BASE_URL = os.getenv("APP_BASE_URL", "http://127.0.0.1:8001")
 
 
 @router.get("/login")
