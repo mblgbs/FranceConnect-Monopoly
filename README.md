@@ -7,7 +7,6 @@ This project provides a minimal digital authentication device that simulates a F
 - Mock login flow with redirect/callback.
 - `state` validation to prevent CSRF in OAuth redirection.
 - Signed cookie-based local session (`HttpOnly`, configurable `Secure` and `SameSite`).
-- Session persistence in central save-service with cookie fallback when unavailable.
 - Protected endpoint (`/me`) requiring authentication.
 - Logout endpoint that clears the session.
 - Access token issuance endpoint for API clients.
@@ -32,6 +31,7 @@ Copy `.env.example` to `.env` and adjust values as needed.
 Important variables:
 
 - `APP_BASE_URL`: base URL used for redirects (default `http://127.0.0.1:8001`)
+- `PORT`: local API port (recommended `8001`)
 - `SESSION_SECRET`: signing secret for the cookie session
 - `SESSION_COOKIE_NAME`: session cookie key
 - `SESSION_SECURE`: set `true` in HTTPS environments
@@ -39,15 +39,11 @@ Important variables:
 - `TOKEN_SECRET`: signing secret for issued access tokens
 - `TOKEN_TTL_SECONDS`: access token lifetime (default `900`)
 - `TOKEN_ISSUER`: token issuer string used in metadata
-- `SAVE_SERVICE_BASE_URL`: central save-service base URL (default `http://127.0.0.1:8010`)
-- `SAVE_SERVICE_TIMEOUT_SECONDS`: timeout for save-service calls (default `2.5`)
-- `SAVE_SERVICE_RETRIES`: retry count for save-service calls (default `1`)
-- `SAVE_SERVICE_API_TOKEN`: optional token sent via `X-API-Token`
 
 ## Run
 
 ```bash
-uvicorn app.main:app --reload --port 8001
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
 ```
 
 ## Manual test scenario

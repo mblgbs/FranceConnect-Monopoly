@@ -26,5 +26,5 @@ def me(current_user: MockUser = Depends(get_current_user)) -> MockUser:
 def jwks_or_config() -> dict[str, str]:
     return {
         "note": "MVP config endpoint; use /auth/config for service integration details.",
-        "config_url": f"{os.getenv('APP_BASE_URL', 'http://127.0.0.1:8001')}/auth/config",
+        "config_url": f"{os.getenv('APP_BASE_URL', 'http://127.0.0.1:8000')}/auth/config",
     }
