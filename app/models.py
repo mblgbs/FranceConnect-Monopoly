@@ -9,6 +9,7 @@ class MockUser(BaseModel):
 
 
 class SessionPayload(BaseModel):
+    session_id: str | None = None
     state: str | None = None
     user: MockUser | None = None
 

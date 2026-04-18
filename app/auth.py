@@ -6,7 +6,7 @@ from fastapi import APIRouter, Header, HTTPException, Query, Request, Response, 
 from fastapi.responses import RedirectResponse
 
 from .models import IntrospectionResponse, MessageResponse, MockUser, SessionPayload, TokenResponse
-from .session import clear_session, get_session, set_session
+from .session import get_session, revoke_session, set_session
 from .token_service import TOKEN_ISSUER, TOKEN_TTL_SECONDS, build_access_token, introspect_access_token
 
 
@@ -60,18 +60,18 @@ def callback(
         media_type="application/json",
         status_code=status.HTTP_200_OK,
     )
-    set_session(response, SessionPayload(user=user))
+    set_session(response, SessionPayload(session_id=session.session_id, user=user))
     return response
 
 
 @router.post("/logout", response_model=MessageResponse)
-def logout() -> Response:
+def logout(request: Request) -> Response:
     response = Response(
         content=MessageResponse(message="Logged out").model_dump_json(),
         media_type="application/json",
         status_code=status.HTTP_200_OK,
     )
-    clear_session(response)
+    revoke_session(request, response)
     return response
 
 

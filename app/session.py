@@ -3,11 +3,13 @@ import hashlib
 import hmac
 import json
 import os
+import secrets
 from typing import Any
 
 from fastapi import HTTPException, Request, Response, status
 
 from .models import MockUser, SessionPayload
+from .save_service_client import SaveServiceError, delete_session, load_session, save_session
 
 
 SESSION_COOKIE_NAME = os.getenv("SESSION_COOKIE_NAME", "fc_monopoly_session")
@@ -56,7 +58,14 @@ def _deserialize(raw_cookie: str) -> SessionPayload:
 
 
 def set_session(response: Response, payload: SessionPayload) -> None:
-    token = _serialize(payload)
+    session_id = payload.session_id or secrets.token_urlsafe(20)
+    payload_with_id = SessionPayload(session_id=session_id, state=payload.state, user=payload.user)
+    try:
+        save_session(session_id, payload_with_id.model_dump())
+    except SaveServiceError:
+        # Keep cookie-only fallback if remote persistence is unavailable.
+        pass
+    token = _serialize(payload_with_id)
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=token,
@@ -76,7 +85,26 @@ def get_session(request: Request) -> SessionPayload:
     raw_cookie = request.cookies.get(SESSION_COOKIE_NAME)
     if not raw_cookie:
         return SessionPayload()
-    return _deserialize(raw_cookie)
+    payload = _deserialize(raw_cookie)
+    if payload.session_id:
+        try:
+            stored = load_session(payload.session_id)
+            if stored is not None:
+                return SessionPayload.model_validate(stored)
+        except SaveServiceError:
+            # Keep old behavior by falling back to cookie data.
+            return payload
+    return payload
+
+
+def revoke_session(request: Request, response: Response) -> None:
+    payload = get_session(request)
+    if payload.session_id:
+        try:
+            delete_session(payload.session_id)
+        except SaveServiceError:
+            pass
+    clear_session(response)
 
 
 def get_current_user(request: Request) -> MockUser:
