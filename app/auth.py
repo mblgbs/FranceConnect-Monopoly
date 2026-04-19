@@ -2,12 +2,11 @@ import os
 import secrets
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Header, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 
-from .models import IntrospectionResponse, MessageResponse, MockUser, SessionPayload, TokenResponse
+from .models import MessageResponse, MockUser, SessionPayload
 from .session import clear_session, get_session, set_session
-from .token_service import TOKEN_ISSUER, TOKEN_TTL_SECONDS, build_access_token, introspect_access_token
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -73,32 +72,3 @@ def logout() -> Response:
     )
     clear_session(response)
     return response
-
-
-@router.post("/token", response_model=TokenResponse)
-def issue_token(request: Request) -> TokenResponse:
-    session = get_session(request)
-    if session.user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
-    access_token, expires_in = build_access_token(session.user)
-    return TokenResponse(access_token=access_token, expires_in=expires_in)
-
-
-@router.get("/introspect", response_model=IntrospectionResponse)
-def introspect(authorization: str | None = Header(default=None)) -> IntrospectionResponse:
-    if not authorization:
-        return IntrospectionResponse(active=False)
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token:
-        return IntrospectionResponse(active=False)
-    return IntrospectionResponse(**introspect_access_token(token))
-
-
-@router.get("/config")
-def config() -> dict[str, str | int]:
-    return {
-        "issuer": TOKEN_ISSUER,
-        "introspection_endpoint": f"{APP_BASE_URL}/auth/introspect",
-        "token_endpoint": f"{APP_BASE_URL}/auth/token",
-        "token_ttl_seconds": TOKEN_TTL_SECONDS,
-    }
